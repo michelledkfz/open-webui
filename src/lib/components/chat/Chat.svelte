@@ -315,6 +315,17 @@
 	let imageGenerationEnabled = false;
 	let webSearchEnabled = false;
 	let codeInterpreterEnabled = false;
+
+	// Per-chat activation of builtin tool categories the model has set to "manual".
+	let manualBuiltinTools: string[] = [];
+	let selectedBuiltinTools: string[] = [];
+
+	$: {
+		const mid = atSelectedModel?.id ?? selectedModels[0];
+		const m = $models.find((x) => x.id === mid);
+		const meta = m?.info?.meta?.builtinTools ?? {};
+		manualBuiltinTools = Object.keys(meta).filter((k) => meta[k] === 'manual');
+	}
 	let webSearchActive = false;
 	let showWebSearchConfirm = false;
 	let pendingWebSearchPrompt: string | null = null;
@@ -733,6 +744,7 @@
 		webSearchEnabled = false;
 		imageGenerationEnabled = false;
 		codeInterpreterEnabled = false;
+		selectedBuiltinTools = [];
 
 		if (selectedModelIds.filter((id) => id).length > 0) {
 			await setDefaults();
@@ -3304,6 +3316,7 @@
 
 				filter_ids: selectedFilterIds.length > 0 ? selectedFilterIds : undefined,
 				tool_ids: toolIds.length > 0 ? toolIds : undefined,
+				builtin_tools: selectedBuiltinTools.length > 0 ? selectedBuiltinTools : undefined,
 				skill_ids: skillIds.length > 0 ? skillIds : undefined,
 				terminal_id:
 					terminalEnabled &&
@@ -4141,6 +4154,8 @@
 										bind:codeInterpreterEnabled
 										{pendingOAuthTools}
 										bind:webSearchEnabled
+										bind:manualBuiltinTools
+										bind:selectedBuiltinTools
 										bind:atSelectedModel
 										bind:showCommands
 										bind:dragged
@@ -4233,6 +4248,8 @@
 										bind:codeInterpreterEnabled
 										{pendingOAuthTools}
 										bind:webSearchEnabled
+										bind:manualBuiltinTools
+										bind:selectedBuiltinTools
 										bind:atSelectedModel
 										bind:showCommands
 										bind:dragged
@@ -4284,6 +4301,8 @@
 									bind:imageGenerationEnabled
 									bind:codeInterpreterEnabled
 									bind:webSearchEnabled
+									bind:manualBuiltinTools
+									bind:selectedBuiltinTools
 									bind:atSelectedModel
 									bind:showCommands
 									bind:dragged

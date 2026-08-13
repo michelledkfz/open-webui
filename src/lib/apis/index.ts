@@ -1760,6 +1760,7 @@ export interface ModelMeta {
 	description?: string;
 	capabilities?: object;
 	profile_image_url?: string;
+	builtinTools?: Record<string, boolean | 'manual'>;
 }
 
 export interface ModelParams {}

@@ -55,6 +55,37 @@
 	export let showCodeInterpreterButton = false;
 	export let codeInterpreterEnabled = false;
 
+	// Builtin tool categories set to "manual" for the current model. These are
+	// only injected when the user enables them in this chat (selectedBuiltinTools).
+	export let manualBuiltinTools: string[] = [];
+	export let selectedBuiltinTools: string[] = [];
+
+	const builtinToolLabels: Record<string, { label: string }> = {
+		time: { label: $i18n.t('Time & Calculation') },
+		memory: { label: $i18n.t('Memory') },
+		chats: { label: $i18n.t('Chat History') },
+		notes: { label: $i18n.t('Notes') },
+		knowledge: { label: $i18n.t('Knowledge Base') },
+		files: { label: $i18n.t('Files') },
+		channels: { label: $i18n.t('Channels') },
+		notifications: { label: $i18n.t('Notifications') },
+		web_search: { label: $i18n.t('Web Search') },
+		image_generation: { label: $i18n.t('Image Generation') },
+		code_interpreter: { label: $i18n.t('Code Interpreter') },
+		tasks: { label: $i18n.t('Task Management') },
+		automations: { label: $i18n.t('Automations') },
+		calendar: { label: $i18n.t('Calendar') },
+		subagents: { label: $i18n.t('Sub-agents') }
+	};
+
+	function toggleBuiltinTool(tool: string) {
+		if (selectedBuiltinTools.includes(tool)) {
+			selectedBuiltinTools = selectedBuiltinTools.filter((t) => t !== tool);
+		} else {
+			selectedBuiltinTools = [...selectedBuiltinTools, tool];
+		}
+	}
+
 	export let onShowValves: Function;
 	export let onClose: Function;
 	export let onWebSearchToggle: Function = () => {};
@@ -371,6 +402,45 @@
 								</div>
 							</button>
 						</Tooltip>
+					{/if}
+
+					{#if manualBuiltinTools.length > 0}
+						<div
+							class="my-1 px-2 text-[0.6875rem] font-medium uppercase tracking-wide text-gray-400"
+						>
+							{$i18n.t('Builtin Tools')}
+						</div>
+						{#each manualBuiltinTools as tool (tool)}
+							<Tooltip content={builtinToolLabels[tool]?.label ?? tool} placement="top-start">
+								<button
+									class="flex w-full justify-between gap-2 items-center h-[1.6875rem] px-2 text-[0.8125rem] font-normal cursor-pointer rounded-xl hover:bg-gray-50/40 dark:hover:bg-gray-800/40"
+									aria-pressed={selectedBuiltinTools.includes(tool)}
+									on:click={() => toggleBuiltinTool(tool)}
+								>
+									<div class="flex-1 truncate">
+										<div class="flex flex-1 gap-2 items-center">
+											<div class="shrink-0">
+												<Photo className="size-3.5" strokeWidth="1.5" />
+											</div>
+
+											<div class=" truncate">
+												{builtinToolLabels[tool]?.label ?? tool}
+											</div>
+										</div>
+									</div>
+
+									<div class=" shrink-0">
+										<Switch
+											state={selectedBuiltinTools.includes(tool)}
+											on:change={async (e) => {
+												const state = e.detail;
+												await tick();
+											}}
+										/>
+									</div>
+								</button>
+							</Tooltip>
+						{/each}
 					{/if}
 				</div>
 			{:else if tab === 'tools' && tools}

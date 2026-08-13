@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
-	import Checkbox from '$lib/components/common/Checkbox.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import { marked } from 'marked';
 
@@ -71,7 +70,31 @@
 
 	const allTools = Object.keys(toolLabels) as Array<keyof typeof toolLabels>;
 
-	export let builtinTools: Record<string, boolean> = {};
+	// Each category is a tri-state:
+	//   - 'auto'   (absent / true)  -> the model decides for itself (default)
+	//   - 'manual' ('manual')       -> only used when the user enables it in the chat
+	//   - 'off'    (false)          -> never injected
+	export let builtinTools: Record<string, boolean | 'manual'> = {};
+
+	const modeOptions = ['auto', 'manual', 'off'] as const;
+	type Mode = (typeof modeOptions)[number];
+
+	function currentMode(tool: string): Mode {
+		if (builtinTools[tool] === false) return 'off';
+		if (builtinTools[tool] === 'manual') return 'manual';
+		return 'auto';
+	}
+
+	function setMode(tool: string, mode: Mode) {
+		if (mode === 'off') {
+			builtinTools[tool] = false;
+		} else if (mode === 'manual') {
+			builtinTools[tool] = 'manual';
+		} else {
+			delete builtinTools[tool];
+		}
+		builtinTools = builtinTools;
+	}
 </script>
 
 <div>
@@ -79,23 +102,23 @@
 	<div class="grid grid-cols-1 gap-x-5 gap-y-1 sm:grid-cols-2 lg:grid-cols-3">
 		{#each allTools as tool}
 			<div class="flex min-h-6 items-center gap-2.5">
-				<Checkbox
-					ariaLabel={$i18n.t(toolLabels[tool].label)}
-					state={builtinTools[tool] !== false ? 'checked' : 'unchecked'}
-					on:change={(e) => {
-						if (e.detail === 'checked') {
-							delete builtinTools[tool];
-						} else {
-							builtinTools[tool] = false;
-						}
-						builtinTools = builtinTools;
-					}}
-				/>
-				<div class="min-w-0 text-xs text-gray-600 dark:text-gray-400">
+				<div class="min-w-0 flex-1 text-xs text-gray-600 dark:text-gray-400">
 					<Tooltip content={marked.parse(toolLabels[tool].description)}>
 						<span class="truncate">{$i18n.t(toolLabels[tool].label)}</span>
 					</Tooltip>
 				</div>
+				<select
+					class="h-7 w-28 rounded border border-gray-300 bg-transparent px-1 text-xs text-gray-600 dark:border-gray-600 dark:text-gray-300"
+					aria-label={$i18n.t(toolLabels[tool].label)}
+					value={currentMode(tool)}
+					on:change={(e) => setMode(tool, e.currentTarget.value as Mode)}
+				>
+					{#each modeOptions as mode}
+						<option value={mode}
+							>{$i18n.t(mode === 'auto' ? 'Auto' : mode === 'manual' ? 'Manual' : 'Off')}</option
+						>
+					{/each}
+				</select>
 			</div>
 		{/each}
 	</div>

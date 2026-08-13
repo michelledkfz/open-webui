@@ -1216,6 +1216,7 @@ async def chat_completion(
             'chat_variables': chat_variables,
             'model': model,
             'direct': model_item.get('direct', False),
+            'builtin_tools': form_data.get('builtin_tools') or [],
             'params': {
                 'stream_delta_chunk_size': stream_delta_chunk_size,
                 'reasoning_tags': reasoning_tags,

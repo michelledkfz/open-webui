@@ -160,6 +160,8 @@
 	export let imageGenerationEnabled = false;
 	export let webSearchEnabled = false;
 	export let codeInterpreterEnabled = false;
+	export let manualBuiltinTools: string[] = [];
+	export let selectedBuiltinTools: string[] = [];
 
 	export let pendingOAuthTools = [];
 
@@ -2088,6 +2090,8 @@
 												bind:webSearchEnabled
 												bind:imageGenerationEnabled
 												bind:codeInterpreterEnabled
+												bind:manualBuiltinTools
+												bind:selectedBuiltinTools
 												{onWebSearchToggle}
 												closeOnOutsideClick={integrationsMenuCloseOnOutsideClick}
 												onShowValves={(e) => {

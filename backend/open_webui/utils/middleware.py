@@ -2826,7 +2826,9 @@ async def process_chat_payload(request, form_data, user, metadata, model):
             chat_id = metadata.get('chat_id')
             form_data['messages'] = await add_file_context(form_data.get('messages', []), chat_id, user)
 
-            if (model.get('info', {}).get('meta', {}).get('builtinTools') or {}).get('knowledge', True):
+            # Only inject attached-knowledge tags when the knowledge builtin is
+            # not explicitly disabled (auto or manual).
+            if (model.get('info', {}).get('meta', {}).get('builtinTools') or {}).get('knowledge', True) is not False:
                 from html import escape
 
                 knowledge_tags = []
@@ -4090,9 +4092,13 @@ async def streaming_chat_response_handler(response, ctx):
             builtin_tools_meta = model.get('info', {}).get('meta', {}).get('builtinTools', {})
             DETECT_CODE_INTERPRETER = (
                 bool(features.get('code_interpreter'))
-                and builtin_tools_meta.get('code_interpreter', True)
+                and builtin_tools_meta.get('code_interpreter', True) is not False
                 and await Config.get('code_interpreter.enable')
                 and model_capabilities.get('code_interpreter', True)
+                and (
+                    builtin_tools_meta.get('code_interpreter', True) != 'manual'
+                    or 'code_interpreter' in (metadata.get('builtin_tools') or [])
+                )
                 and (
                     getattr(user, 'role', None) == 'admin'
                     or await has_permission(

@@ -502,23 +502,27 @@ def get_attached_knowledge(model: dict, metadata: dict) -> list[dict]:
             knowledge.append({**item, 'source': source})
             seen.add(key)
 
-    file_context_enabled = (model_meta.get('capabilities') or {}).get('file_context', True)
-    if not file_context_enabled:
-        for item in metadata.get('files') or []:
-            if not isinstance(item, dict) or item.get('type') not in ('collection', 'note'):
-                continue
-            key = (item.get('type'), item.get('id'))
-            if not all(key) or key in seen:
-                continue
-            knowledge.append(
-                {
-                    'type': item.get('type'),
-                    'id': item.get('id'),
-                    'name': item.get('name'),
-                    'source': 'chat',
-                }
-            )
-            seen.add(key)
+    # Also include collections/notes attached directly to the current chat
+    # payload (metadata['files']).  This must happen *regardless* of the
+    # model's file_context capability – the Auto-RAG path (add_file_context)
+    # and the native-tool path are orthogonal.  Tool injection needs to know
+    # what is attached even when the same model also receives automatic
+    # chunk injection.
+    for item in metadata.get('files') or []:
+        if not isinstance(item, dict) or item.get('type') not in ('collection', 'note'):
+            continue
+        key = (item.get('type'), item.get('id'))
+        if not all(key) or key in seen:
+            continue
+        knowledge.append(
+            {
+                'type': item.get('type'),
+                'id': item.get('id'),
+                'name': item.get('name'),
+                'source': 'chat',
+            }
+        )
+        seen.add(key)
 
     return knowledge
 
